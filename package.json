@@ -1,13 +1,13 @@
 {
-  "publisher": "will",
+  "publisher": "will670",
   "repository": {
     "type": "git",
     "url": "https://github.com/sywc670/mlink"
   },
   "license": "MIT",
   "name": "mlink",
-  "displayName": "mlink",
-  "description": "Markdown Links and Backlinks manager",
+  "displayName": "MLink",
+  "description": "Markdown Links and Backlinks",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.110.0"
