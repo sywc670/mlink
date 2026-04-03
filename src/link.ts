@@ -15,13 +15,11 @@ export class LinkIndexManager {
         ".gif",
         ".svg",
         ".webp",
-        ".pdf",
-        ".zip",
     ];
 
     constructor(private root: string) {}
 
-    private toRel(fsPath: string): string {
+    private toRootRel(fsPath: string): string {
         return path.relative(this.root, fsPath).replace(/\\/g, "/");
     }
 
@@ -56,7 +54,7 @@ export class LinkIndexManager {
         // 1. 直接检查原始路径是否存在
         if (fs.existsSync(finalPath)) {
             return {
-                relPath: this.toRel(finalPath),
+                relPath: this.toRootRel(finalPath),
                 isDir: fs.statSync(finalPath).isDirectory(),
             };
         }
@@ -65,7 +63,7 @@ export class LinkIndexManager {
         if (ext === "") {
             const withMd = finalPath + ".md";
             if (fs.existsSync(withMd)) {
-                return { relPath: this.toRel(withMd), isDir: false };
+                return { relPath: this.toRootRel(withMd), isDir: false };
             }
         }
 
@@ -76,7 +74,7 @@ export class LinkIndexManager {
     async indexWorkspace() {
         const files = await vscode.workspace.findFiles(
             "**/*.md",
-            "**/node_modules/**",
+            "{**/node_modules/**,**/.git/**}",
         );
         for (const file of files) {
             await this.updateFileIndex(file.fsPath);
@@ -86,7 +84,7 @@ export class LinkIndexManager {
     async updateFileIndex(filePath: string) {
         try {
             const content = await fs.promises.readFile(filePath, "utf-8");
-            const sourceRel = this.toRel(filePath);
+            const sourceRel = this.toRootRel(filePath);
             const links = new Set<{ relPath: string; isDir: boolean }>();
 
             // 排除图片语法 ![]()
@@ -109,20 +107,22 @@ export class LinkIndexManager {
             }
             this.forwardLinks.set(sourceRel, links);
         } catch {
-            this.forwardLinks.delete(this.toRel(filePath));
+            this.forwardLinks.delete(this.toRootRel(filePath));
         }
     }
 
     removeFile(filePath: string) {
-        this.forwardLinks.delete(this.toRel(filePath));
+        this.forwardLinks.delete(this.toRootRel(filePath));
     }
 
     getOutgoing(sourceAbs: string) {
-        return Array.from(this.forwardLinks.get(this.toRel(sourceAbs)) || []);
+        return Array.from(
+            this.forwardLinks.get(this.toRootRel(sourceAbs)) || [],
+        );
     }
 
     getBacklinks(targetAbs: string) {
-        const targetRel = this.toRel(targetAbs);
+        const targetRel = this.toRootRel(targetAbs);
         const backers: string[] = [];
         this.forwardLinks.forEach((links, source) => {
             if (Array.from(links).some((l) => l.relPath === targetRel)) {
