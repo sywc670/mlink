@@ -2,6 +2,8 @@
 
 **MLink** is a VS Code extension designed for Markdown creators and knowledge base managers (like Obsidian or Logseq users). It automatically analyzes **Outgoing Links** and **Backlinks** for your current document, providing a seamless navigation experience within your workspace.
 
+![](img/image.png)
+
 ## Key Features
 
 * **Bi-directional Link Analysis**:
