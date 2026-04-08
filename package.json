@@ -8,7 +8,7 @@
   "name": "mlink",
   "displayName": "MLink",
   "description": "Markdown Links and Backlinks",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -20,6 +20,22 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "mlink.refreshIndex",
+        "title": "MLink: Refresh Global Index",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "mlink.refreshIndex",
+          "when": "view == mlink-links || view == mlink-backlinks",
+          "group": "navigation"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {

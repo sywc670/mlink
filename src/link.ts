@@ -87,15 +87,15 @@ export class LinkIndexManager {
             const sourceRel = this.toRootRel(filePath);
             const links = new Set<{ relPath: string; isDir: boolean }>();
 
-            // 排除图片语法 ![]()
-            const linkPattern = /(?<!\!)\[\[(.*?)\]\]|(?<!\!)\[.*?\]\((.*?)\)/g;
+            // 仅匹配标准 Markdown 链接 [text](path)
+            const linkPattern = /(?<!\!)\[.*?\]\((.*?)\)/g;
             let match;
 
             while ((match = linkPattern.exec(content)) !== null) {
-                const raw = match[1] || match[2];
+                const raw = match[1];
                 const verified = this.resolveAndVerify(filePath, raw);
+
                 if (verified) {
-                    // 检查是否重复添加（Set 需要处理对象引用，这里手动检查或转 string）
                     if (
                         !Array.from(links).some(
                             (l) => l.relPath === verified.relPath,
@@ -130,6 +130,14 @@ export class LinkIndexManager {
             }
         });
         return backers;
+    }
+
+    /**
+     * 完全重置并重建索引
+     */
+    async reloadAll() {
+        this.forwardLinks.clear(); // 清空内存 Map
+        await this.indexWorkspace(); // 重新扫描整个工作区
     }
 }
 

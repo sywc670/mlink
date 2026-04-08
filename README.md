@@ -1,6 +1,6 @@
 # MLink - Markdown Links and Backlinks
 
-**MLink** is a VS Code extension designed for Markdown creators and knowledge base managers (like Obsidian or Logseq users). It automatically analyzes **Outgoing Links** and **Backlinks** for your current document, providing a seamless navigation experience within your workspace.
+**MLink** is a VS Code extension designed for Markdown creators and knowledge base managers (like Obsidian). It automatically analyzes **Outgoing Links** and **Backlinks** for your current document, providing a seamless navigation experience within your workspace.
 
 ![](img/image.png)
 
@@ -10,7 +10,7 @@
     * **Outgoing Links**: Real-time extraction of all local files, headers, and directory references within the current document.
     * **Backlinks**: Instant discovery of which documents across your entire workspace reference the current file.
 * **Smart Path Resolution**:
-    * Supports standard Markdown syntax `[text](path)` and Wiki-link syntax `[[path]]`.
+    * Supports standard Markdown syntax `[text](path)`.
     * Handles both absolute paths (relative to the workspace root) and relative paths.
     * **Auto-completion**: Automatically identifies and jumps to files even if the `.md` extension is missing in the link.
 * **Directory & File Recognition**:
