@@ -31,7 +31,7 @@
       "view/title": [
         {
           "command": "mlink.refreshIndex",
-          "when": "view == mlink-links",
+          "when": "view == mlink-links && mlink.isMarkdownEditor",
           "group": "navigation"
         }
       ]
@@ -51,7 +51,8 @@
         {
           "icon": "$(link)",
           "id": "mlink-links",
-          "name": "Links"
+          "name": "Links",
+          "when": "mlink.isMarkdownEditor"
         }
       ]
     }

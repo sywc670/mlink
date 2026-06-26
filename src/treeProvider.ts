@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
+import { isMarkdownEditor } from "./editorContext";
 import { MarkdownLinkIndex } from "./markdownIndex";
 import { LinkItem, SectionItem } from "./type";
 
@@ -22,6 +23,11 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
     }
 
     async getChildren(element?: TreeNode): Promise<TreeNode[]> {
+        const editor = vscode.window.activeTextEditor;
+        if (!isMarkdownEditor(editor)) {
+            return [];
+        }
+
         if (!element) {
             return [
                 new SectionItem("links", "Links"),
@@ -30,11 +36,6 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
         }
 
         if (!(element instanceof SectionItem)) {
-            return [];
-        }
-
-        const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.languageId !== "markdown") {
             return [];
         }
 
