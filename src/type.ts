@@ -6,14 +6,30 @@ export interface LinkMetadata {
     relPath: string;
     line: number;
     type: "links" | "backlinks";
-    isDir: boolean; // 新增：标记是否为目录
+    isDir: boolean;
+}
+
+/**
+ * Represents a collapsible group in the links tree.
+ */
+export class SectionItem extends vscode.TreeItem {
+    constructor(
+        public readonly type: "links" | "backlinks",
+        label: string,
+    ) {
+        super(label, vscode.TreeItemCollapsibleState.Expanded);
+        this.contextValue = "section";
+        this.iconPath = new vscode.ThemeIcon(
+            type === "links" ? "link" : "references",
+        );
+    }
 }
 
 export class LinkItem extends vscode.TreeItem {
     constructor(public readonly meta: LinkMetadata) {
         super(meta.label, vscode.TreeItemCollapsibleState.None);
         this.description = meta.description;
-        // 根据是否为目录显示不同图标
+        // Use a directory icon when the link target is a folder.
         this.iconPath = meta.isDir
             ? new vscode.ThemeIcon("folder")
             : new vscode.ThemeIcon(

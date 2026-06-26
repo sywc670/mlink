@@ -7,8 +7,8 @@
   "license": "MIT",
   "name": "mlink",
   "displayName": "MLink",
-  "description": "Markdown Links and Backlinks",
-  "version": "0.1.0",
+  "description": "Markdown links and backlinks",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -23,7 +23,7 @@
     "commands": [
       {
         "command": "mlink.refreshIndex",
-        "title": "MLink: Refresh Global Index",
+        "title": "MLink: Refresh Workspace Index",
         "icon": "$(refresh)"
       }
     ],
@@ -31,7 +31,7 @@
       "view/title": [
         {
           "command": "mlink.refreshIndex",
-          "when": "view == mlink-links || view == mlink-backlinks",
+          "when": "view == mlink-links",
           "group": "navigation"
         }
       ]
@@ -51,12 +51,7 @@
         {
           "icon": "$(link)",
           "id": "mlink-links",
-          "name": "Outgoing Links"
-        },
-        {
-          "icon": "$(link)",
-          "id": "mlink-backlinks",
-          "name": "Backlinks"
+          "name": "Links"
         }
       ]
     }
@@ -73,18 +68,19 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
+    "unit-test": "npm run compile-tests && node --test out/*.test.js",
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.110.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "typescript-eslint": "^8.56.1",
-    "eslint": "^9.39.3",
+    "@types/node": "^22.20.0",
+    "@types/vscode": "^1.110.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.3",
+    "eslint": "^9.39.3",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.56.1"
   }
 }
