@@ -21,6 +21,7 @@ const excludedExtensions = new Set([
  */
 export class MarkdownLinkIndex {
     private forwardLinks = new Map<string, LinkEntry[]>();
+    private backwardLinks = new Map<string, LinkEntry[]>();
 
     constructor(private readonly root: string) {}
 
@@ -51,18 +52,23 @@ export class MarkdownLinkIndex {
                 }
             }
 
+            this.removeSourceBacklinks(sourceRel);
             this.forwardLinks.set(sourceRel, links);
+            this.addSourceBacklinks(sourceRel, links);
         } catch {
             this.removeFile(filePath);
         }
     }
 
     removeFile(filePath: string): void {
-        this.forwardLinks.delete(this.toRootRel(filePath));
+        const sourceRel = this.toRootRel(filePath);
+        this.removeSourceBacklinks(sourceRel);
+        this.forwardLinks.delete(sourceRel);
     }
 
     clear(): void {
         this.forwardLinks.clear();
+        this.backwardLinks.clear();
     }
 
     getOutgoing(sourceAbs: string): LinkEntry[] {
@@ -71,20 +77,7 @@ export class MarkdownLinkIndex {
 
     getBacklinks(targetAbs: string): LinkEntry[] {
         const targetRel = this.toRootRel(targetAbs);
-        const backers: LinkEntry[] = [];
-
-        this.forwardLinks.forEach((links, source) => {
-            const link = links.find((entry) => entry.relPath === targetRel);
-            if (link) {
-                backers.push({
-                    relPath: source,
-                    isDir: false,
-                    line: link.line,
-                });
-            }
-        });
-
-        return backers;
+        return this.backwardLinks.get(targetRel) ?? [];
     }
 
     private toRootRel(fsPath: string): string {
@@ -128,6 +121,41 @@ export class MarkdownLinkIndex {
         }
 
         return null;
+    }
+
+    /**
+     * Adds reverse lookup entries so backlink reads do not scan every file.
+     */
+    private addSourceBacklinks(sourceRel: string, links: readonly LinkEntry[]): void {
+        for (const link of links) {
+            const backers = this.backwardLinks.get(link.relPath) ?? [];
+            backers.push({
+                relPath: sourceRel,
+                isDir: false,
+                line: link.line,
+            });
+            this.backwardLinks.set(link.relPath, backers);
+        }
+    }
+
+    /**
+     * Removes stale reverse lookup entries before a source file is re-indexed.
+     */
+    private removeSourceBacklinks(sourceRel: string): void {
+        const links = this.forwardLinks.get(sourceRel) ?? [];
+
+        for (const link of links) {
+            const nextBackers = (this.backwardLinks.get(link.relPath) ?? []).filter(
+                (backer) => backer.relPath !== sourceRel,
+            );
+
+            if (nextBackers.length === 0) {
+                this.backwardLinks.delete(link.relPath);
+                continue;
+            }
+
+            this.backwardLinks.set(link.relPath, nextBackers);
+        }
     }
 }
 

@@ -63,3 +63,33 @@ test("removes a file from the in-memory index", async () => {
         await fs.rm(root, { recursive: true, force: true });
     }
 });
+
+test("updates cached backlinks when a file is re-indexed", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "mlink-"));
+    try {
+        const source = path.join(root, "source.md");
+        const firstTarget = path.join(root, "first.md");
+        const secondTarget = path.join(root, "second.md");
+
+        await fs.writeFile(source, "[First](first.md)");
+        await fs.writeFile(firstTarget, "# First");
+        await fs.writeFile(secondTarget, "# Second");
+
+        const index = new MarkdownLinkIndex(root);
+        await index.indexFiles([source, firstTarget, secondTarget]);
+
+        assert.deepStrictEqual(index.getBacklinks(firstTarget), [
+            { relPath: "source.md", isDir: false, line: 0 },
+        ]);
+
+        await fs.writeFile(source, "[Second](second.md)");
+        await index.updateFileIndex(source);
+
+        assert.deepStrictEqual(index.getBacklinks(firstTarget), []);
+        assert.deepStrictEqual(index.getBacklinks(secondTarget), [
+            { relPath: "source.md", isDir: false, line: 0 },
+        ]);
+    } finally {
+        await fs.rm(root, { recursive: true, force: true });
+    }
+});
