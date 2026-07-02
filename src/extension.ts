@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
 import { indexWorkspace, registerCommands } from "./commands";
-import { isMarkdownEditor } from "./editorContext";
-import { MarkdownLinkIndex } from "./markdownIndex";
-import { MarkdownLinksProvider } from "./treeProvider";
-import { registerFileSystemWatcher } from "./watchers";
+import { HeadingReferenceDecorator } from "./features/heading-references/HeadingReferenceDecorator";
+import { MarkdownLinksProvider } from "./features/links-tree/MarkdownLinksProvider";
+import { registerFileSystemWatcher } from "./services/markdown-index/watchers";
+import { MarkdownLinkIndex } from "./services/markdown-index/MarkdownLinkIndex";
+import { isMarkdownEditor } from "./shared/editorContext";
 
 export async function activate(context: vscode.ExtensionContext) {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
@@ -13,9 +14,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const indexManager = new MarkdownLinkIndex(workspaceRoot);
     const linksProvider = new MarkdownLinksProvider(indexManager);
+    const headingDecorator = new HeadingReferenceDecorator(indexManager);
 
     const refreshAll = (): void => {
         linksProvider.refresh();
+        headingDecorator.refresh();
     };
     const updateEditorContext = async (): Promise<void> => {
         await vscode.commands.executeCommand(
@@ -31,6 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         registerTreeView(linksProvider),
+        headingDecorator,
         registerCommands(indexManager, workspaceRoot, refreshAll),
         registerFileSystemWatcher(indexManager, refreshAll),
         vscode.window.onDidChangeActiveTextEditor(() => {

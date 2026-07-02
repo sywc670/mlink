@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { MarkdownLinkIndex } from "./markdownIndex";
+import { MarkdownLinkIndex } from "./MarkdownLinkIndex";
 
 export function registerFileSystemWatcher(
     index: MarkdownLinkIndex,

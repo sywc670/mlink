@@ -1,35 +1,50 @@
 # MLink
 
-MLink 是一个 VS Code 扩展，用于在 Markdown 工作区中查看当前文档的出链和反向链接。
+[English](README.en.md)
+
+MLink 是一个 VS Code 扩展，用来在 Markdown 工作区中查看当前文件的链接和反向链接。
 
 ![](img/image.png)
 
 ## 功能
 
-- 双向链接分析：展示当前文档引用的本地链接，以及引用当前文档的 Markdown 文件。
-- 智能路径解析：支持标准 Markdown 链接 `[text](path)`，兼容工作区绝对路径和相对路径。
-- 自动补全：链接缺少 `.md` 扩展名时，会尝试匹配同名 Markdown 文件。
-- 文件与目录识别：目录链接会显示目录图标，点击后在 VS Code Explorer 中定位。
-- 内存索引：扫描结果保存在内存中，同时维护出链和反向链接索引，并通过文件监听保持更新。
-- 上下文感知：仅在当前编辑器为 Markdown 文件时展示侧边栏视图和相关内容。
-- 英文界面：插件在 VS Code 中展示的标题、命令和提示统一使用英文。
+- 在侧边栏显示当前 Markdown 文件的出链和反向链接。
+- 支持相对路径、工作区绝对路径和省略 `.md` 后缀的本地链接。
+- 点击链接项可打开目标文件；目录链接会在资源管理器中定位。
+- 通过 `#heading` 引用标题时，高亮被引用标题行开头的 `#`。
+- 自动索引工作区 Markdown 文件，并在文件变化后更新。
+- 提供 `MLink: Refresh Workspace Index` 命令手动刷新索引。
 
-## 项目结构
+## 使用
 
-- `src/extension.ts`：扩展激活入口，只负责装配视图、命令和文件监听。
-- `src/markdownIndex.ts`：Markdown 链接索引核心，不依赖 VS Code，便于单元测试。
-- `src/treeProvider.ts`：侧边栏树视图数据提供者。
-- `src/commands.ts`：命令注册和跳转逻辑。
-- `src/watchers.ts`：Markdown 文件监听逻辑。
-- `src/type.ts`：树节点和链接元数据类型。
+1. 打开包含 Markdown 文件的 VS Code 工作区。
+2. 打开任意 Markdown 文件。
+3. 在 Activity Bar 中打开 MLink，查看 `Links` 和 `Backlinks`。
 
-## 开发命令
+## 开发
 
-- `npm run check-types`：执行 TypeScript 类型检查。
-- `npm run lint`：执行 ESLint 检查。
-- `npm run unit-test`：运行链接索引单元测试。
-- `npm run compile`：执行类型检查、代码检查并打包扩展。
+```bash
+npm install
+npm run compile
+npm run unit-test
+```
 
-## 说明
+常用命令：
 
-当前索引只处理标准 Markdown 行内链接，不处理 Wiki 链接或引用式链接。建议后续将链接解析逻辑独立为解析器模块，便于支持更多 Markdown 语法。
+- `npm run check-types`：类型检查。
+- `npm run lint`：代码检查。
+- `npm run unit-test`：运行单元测试。
+- `npm run compile`：检查并打包扩展。
+
+源码目录：
+
+- `src/extension.ts`：扩展入口和模块装配。
+- `src/commands`：命令注册和命令处理。
+- `src/features`：面向编辑器或视图的功能模块。
+- `src/services`：索引、解析等可复用业务服务。
+- `src/shared`：共享类型和轻量工具。
+- `src/test`：单元测试。
+
+## 限制
+
+MLink 目前只解析标准 Markdown 行内链接，例如 `[text](path)`。暂不支持 Wiki 链接和引用式链接。

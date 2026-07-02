@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import { test } from "node:test";
 import type * as vscode from "vscode";
-import { isMarkdownEditor } from "./editorContext";
+import { isMarkdownEditor } from "../shared/editorContext";
 
 function editorWithLanguage(languageId: string): Pick<vscode.TextEditor, "document"> {
     return {

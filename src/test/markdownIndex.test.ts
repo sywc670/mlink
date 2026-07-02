@@ -3,7 +3,7 @@ import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
 import test from "node:test";
-import { MarkdownLinkIndex } from "./markdownIndex";
+import { MarkdownLinkIndex } from "../services/markdown-index/MarkdownLinkIndex";
 
 test("indexes local links, backlinks, and inferred markdown extensions", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "mlink-"));
@@ -88,6 +88,34 @@ test("updates cached backlinks when a file is re-indexed", async () => {
         assert.deepStrictEqual(index.getBacklinks(firstTarget), []);
         assert.deepStrictEqual(index.getBacklinks(secondTarget), [
             { relPath: "source.md", isDir: false, line: 0 },
+        ]);
+    } finally {
+        await fs.rm(root, { recursive: true, force: true });
+    }
+});
+
+test("indexes heading references for local and cross-file links", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "mlink-"));
+    try {
+        const source = path.join(root, "source.md");
+        const target = path.join(root, "target.md");
+
+        await fs.writeFile(
+            source,
+            [
+                "# Source",
+                "[Local](#Source)",
+                "[Target heading](target.md#Usage%20Guide)",
+            ].join("\n"),
+        );
+        await fs.writeFile(target, ["# Target", "## Usage Guide"].join("\n"));
+
+        const index = new MarkdownLinkIndex(root);
+        await index.indexFiles([source, target]);
+
+        assert.deepStrictEqual(index.getReferencedHeadingSlugs(source), ["source"]);
+        assert.deepStrictEqual(index.getReferencedHeadingSlugs(target), [
+            "usage-guide",
         ]);
     } finally {
         await fs.rm(root, { recursive: true, force: true });

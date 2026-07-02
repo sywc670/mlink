@@ -1,8 +1,8 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { isMarkdownEditor } from "./editorContext";
-import { MarkdownLinkIndex } from "./markdownIndex";
-import { LinkItem, SectionItem } from "./type";
+import { MarkdownLinkIndex } from "../../services/markdown-index/MarkdownLinkIndex";
+import { isMarkdownEditor } from "../../shared/editorContext";
+import { LinkItem, SectionItem } from "../../shared/treeItems";
 
 type TreeNode = LinkItem | SectionItem;
 

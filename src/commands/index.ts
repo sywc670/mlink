@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { MarkdownLinkIndex } from "./markdownIndex";
-import { LinkMetadata } from "./type";
+import { MarkdownLinkIndex } from "../services/markdown-index/MarkdownLinkIndex";
+import { LinkMetadata } from "../shared/treeItems";
 
 export function registerCommands(
     index: MarkdownLinkIndex,
