@@ -44,12 +44,16 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
             return this.index.getOutgoing(currentAbs).map(
                 (info) =>
                     new LinkItem({
-                        label: path.basename(info.relPath),
-                        description: info.relPath,
+                        label: formatLinkPath(
+                            path.basename(info.relPath),
+                            info.slug,
+                        ),
+                        description: formatLinkPath(info.relPath, info.slug),
                         relPath: info.relPath,
                         line: info.line,
                         type: "links",
                         isDir: info.isDir,
+                        slug: info.slug,
                     }),
             );
         }
@@ -57,13 +61,23 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
         return this.index.getBacklinks(currentAbs).map(
             (info) =>
                 new LinkItem({
-                    label: path.basename(info.relPath),
-                    description: `${info.relPath}:${info.line + 1}`,
+                    label: formatLinkPath(
+                        path.basename(info.relPath),
+                        info.slug,
+                    ),
+                    description: `${formatLinkPath(info.relPath, info.slug)}:${
+                        info.line + 1
+                    }`,
                     relPath: info.relPath,
                     line: info.line,
                     type: "backlinks",
                     isDir: info.isDir,
+                    slug: info.slug,
                 }),
         );
     }
+}
+
+function formatLinkPath(relPath: string, slug?: string): string {
+    return slug ? `${relPath}#${slug}` : relPath;
 }

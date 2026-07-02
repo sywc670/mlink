@@ -7,6 +7,7 @@ export interface LinkMetadata {
     line: number;
     type: "links" | "backlinks";
     isDir: boolean;
+    slug?: string;
 }
 
 /**

@@ -113,9 +113,62 @@ test("indexes heading references for local and cross-file links", async () => {
         const index = new MarkdownLinkIndex(root);
         await index.indexFiles([source, target]);
 
+        assert.deepStrictEqual(index.getOutgoing(source), [
+            { relPath: "source.md", isDir: false, line: 1, slug: "source" },
+            {
+                relPath: "target.md",
+                isDir: false,
+                line: 2,
+                slug: "usage-guide",
+            },
+        ]);
+        assert.deepStrictEqual(index.getBacklinks(target), [
+            {
+                relPath: "source.md",
+                isDir: false,
+                line: 2,
+                slug: "usage-guide",
+            },
+        ]);
         assert.deepStrictEqual(index.getReferencedHeadingSlugs(source), ["source"]);
         assert.deepStrictEqual(index.getReferencedHeadingSlugs(target), [
             "usage-guide",
+        ]);
+    } finally {
+        await fs.rm(root, { recursive: true, force: true });
+    }
+});
+
+test("keeps separate links for different heading fragments in the same file", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "mlink-"));
+    try {
+        const source = path.join(root, "source.md");
+        const target = path.join(root, "target.md");
+
+        await fs.writeFile(
+            source,
+            [
+                "[Intro](target.md#Intro)",
+                "[Usage](target.md#Usage)",
+                "[Intro duplicate](target.md#Intro)",
+            ].join("\n"),
+        );
+        await fs.writeFile(target, ["# Intro", "# Usage"].join("\n"));
+
+        const index = new MarkdownLinkIndex(root);
+        await index.indexFiles([source, target]);
+
+        assert.deepStrictEqual(index.getOutgoing(source), [
+            { relPath: "target.md", isDir: false, line: 0, slug: "intro" },
+            { relPath: "target.md", isDir: false, line: 1, slug: "usage" },
+        ]);
+        assert.deepStrictEqual(index.getBacklinks(target), [
+            { relPath: "source.md", isDir: false, line: 0, slug: "intro" },
+            { relPath: "source.md", isDir: false, line: 1, slug: "usage" },
+        ]);
+        assert.deepStrictEqual(index.getReferencedHeadingSlugs(target), [
+            "intro",
+            "usage",
         ]);
     } finally {
         await fs.rm(root, { recursive: true, force: true });

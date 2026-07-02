@@ -2,16 +2,25 @@ import * as fs from "fs";
 import * as path from "path";
 import { normalizeHeadingFragment } from "../markdown-parser/markdownHeadings";
 
+/**
+ * Describes a verified local Markdown link found in a source file.
+ *
+ * Example: `[Guide](docs/guide.md)` in `README.md` becomes
+ * `{ relPath: "docs/guide.md", isDir: false, line: 3 }`.
+ */
 export interface LinkEntry {
+    /**
+     * Workspace-relative path.
+     * For outgoing links this is the target path; for backlinks this is the
+     * source path that contains the link.
+     */
     relPath: string;
+    /** Whether the resolved target path points to a directory. */
     isDir: boolean;
+    /** Zero-based line number where the link appears in the source file. */
     line: number;
-}
-
-export interface HeadingReference {
-    relPath: string;
-    line: number;
-    slug: string;
+    /** Normalized target heading anchor when the link contains a fragment. */
+    slug?: string;
 }
 
 const excludedExtensions = new Set([
@@ -29,7 +38,6 @@ const excludedExtensions = new Set([
 export class MarkdownLinkIndex {
     private forwardLinks = new Map<string, LinkEntry[]>();
     private backwardLinks = new Map<string, LinkEntry[]>();
-    private headingReferences = new Map<string, HeadingReference[]>();
 
     constructor(private readonly root: string) {}
 
@@ -44,7 +52,6 @@ export class MarkdownLinkIndex {
             const content = await fs.promises.readFile(filePath, "utf-8");
             const sourceRel = this.toRootRel(filePath);
             const links: LinkEntry[] = [];
-            const headingRefs: HeadingReference[] = [];
 
             for (const match of content.matchAll(/(?<!\!)\[.*?\]\((.*?)\)/g)) {
                 const rawTarget = match[1];
@@ -53,27 +60,19 @@ export class MarkdownLinkIndex {
 
                 if (
                     verified &&
-                    !links.some((link) => link.relPath === verified.relPath)
+                    !links.some((link) => linkKey(link) === linkKey(verified))
                 ) {
                     links.push({
                         relPath: verified.relPath,
                         isDir: verified.isDir,
                         line,
-                    });
-                }
-
-                if (verified?.slug) {
-                    headingRefs.push({
-                        relPath: verified.relPath,
-                        line,
-                        slug: verified.slug,
+                        ...(verified.slug ? { slug: verified.slug } : {}),
                     });
                 }
             }
 
             this.removeSourceBacklinks(sourceRel);
             this.forwardLinks.set(sourceRel, links);
-            this.headingReferences.set(sourceRel, headingRefs);
             this.addSourceBacklinks(sourceRel, links);
         } catch {
             this.removeFile(filePath);
@@ -84,13 +83,11 @@ export class MarkdownLinkIndex {
         const sourceRel = this.toRootRel(filePath);
         this.removeSourceBacklinks(sourceRel);
         this.forwardLinks.delete(sourceRel);
-        this.headingReferences.delete(sourceRel);
     }
 
     clear(): void {
         this.forwardLinks.clear();
         this.backwardLinks.clear();
-        this.headingReferences.clear();
     }
 
     getOutgoing(sourceAbs: string): LinkEntry[] {
@@ -106,12 +103,10 @@ export class MarkdownLinkIndex {
         const targetRel = this.toRootRel(targetAbs);
         const slugs = new Set<string>();
 
-        this.headingReferences.forEach((refs) => {
-            refs.forEach((ref) => {
-                if (ref.relPath === targetRel) {
-                    slugs.add(ref.slug);
-                }
-            });
+        (this.backwardLinks.get(targetRel) ?? []).forEach((backlink) => {
+            if (backlink.slug) {
+                slugs.add(backlink.slug);
+            }
         });
 
         return [...slugs];
@@ -131,10 +126,7 @@ export class MarkdownLinkIndex {
             return null;
         }
 
-        if (
-            targetClean === "/" ||
-            targetClean.startsWith("http")
-        ) {
+        if (targetClean === "/" || targetClean.startsWith("http")) {
             return null;
         }
 
@@ -163,7 +155,9 @@ export class MarkdownLinkIndex {
                 return {
                     relPath: this.toRootRel(withMd),
                     isDir: false,
-                    slug: fragment ? normalizeHeadingFragment(fragment) : undefined,
+                    slug: fragment
+                        ? normalizeHeadingFragment(fragment)
+                        : undefined,
                 };
             }
         }
@@ -174,13 +168,17 @@ export class MarkdownLinkIndex {
     /**
      * Adds reverse lookup entries so backlink reads do not scan every file.
      */
-    private addSourceBacklinks(sourceRel: string, links: readonly LinkEntry[]): void {
+    private addSourceBacklinks(
+        sourceRel: string,
+        links: readonly LinkEntry[],
+    ): void {
         for (const link of links) {
             const backers = this.backwardLinks.get(link.relPath) ?? [];
             backers.push({
                 relPath: sourceRel,
                 isDir: false,
                 line: link.line,
+                ...(link.slug ? { slug: link.slug } : {}),
             });
             this.backwardLinks.set(link.relPath, backers);
         }
@@ -193,9 +191,9 @@ export class MarkdownLinkIndex {
         const links = this.forwardLinks.get(sourceRel) ?? [];
 
         for (const link of links) {
-            const nextBackers = (this.backwardLinks.get(link.relPath) ?? []).filter(
-                (backer) => backer.relPath !== sourceRel,
-            );
+            const nextBackers = (
+                this.backwardLinks.get(link.relPath) ?? []
+            ).filter((backer) => backer.relPath !== sourceRel);
 
             if (nextBackers.length === 0) {
                 this.backwardLinks.delete(link.relPath);
@@ -211,6 +209,10 @@ function getLineNumber(content: string, offset: number): number {
     return content.slice(0, offset).split(/\r\n|\r|\n/).length - 1;
 }
 
+function linkKey(link: Pick<LinkEntry, "relPath" | "slug">): string {
+    return `${link.relPath}#${link.slug ?? ""}`;
+}
+
 function splitMarkdownTarget(targetRaw: string): {
     pathPart: string;
     fragment: string | null;
@@ -222,6 +224,9 @@ function splitMarkdownTarget(targetRaw: string): {
 
     return {
         pathPart: targetRaw.slice(0, hashIndex),
-        fragment: targetRaw.slice(hashIndex + 1).split("?")[0].trim(),
+        fragment: targetRaw
+            .slice(hashIndex + 1)
+            .split("?")[0]
+            .trim(),
     };
 }
