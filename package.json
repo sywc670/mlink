@@ -8,7 +8,7 @@
   "name": "mlink",
   "displayName": "MLink",
   "description": "Markdown links and backlinks",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -25,6 +25,11 @@
         "command": "mlink.refreshIndex",
         "title": "MLink: Refresh Workspace Index",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "mlink.openLinkSource",
+        "title": "MLink: Open Link Source",
+        "icon": "$(references)"
       }
     ],
     "menus": {
@@ -33,6 +38,24 @@
           "command": "mlink.refreshIndex",
           "when": "view == mlink-links && mlink.isMarkdownEditor",
           "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "mlink.openLinkSource",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "mlink.openLinkSource",
+          "when": "view == mlink-links && viewItem == links-file",
+          "group": "inline"
+        },
+        {
+          "command": "mlink.openLinkSource",
+          "when": "view == mlink-links && viewItem == links-directory",
+          "group": "inline"
         }
       ]
     },

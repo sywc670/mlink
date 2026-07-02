@@ -4,6 +4,7 @@ export interface LinkMetadata {
     label: string;
     description: string;
     relPath: string;
+    sourceRelPath: string;
     line: number;
     type: "links" | "backlinks";
     isDir: boolean;
@@ -37,7 +38,7 @@ export class LinkItem extends vscode.TreeItem {
                   meta.type === "links" ? "link" : "link-external",
               );
 
-        this.contextValue = meta.isDir ? "directory" : "file";
+        this.contextValue = `${meta.type}-${meta.isDir ? "directory" : "file"}`;
         this.command = {
             command: "mlink.gotoLocation",
             title: "Open",

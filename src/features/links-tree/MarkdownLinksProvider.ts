@@ -40,6 +40,7 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
         }
 
         const currentAbs = editor.document.uri.fsPath;
+        const currentRel = this.index.toWorkspaceRelative(currentAbs);
         if (element.type === "links") {
             return this.index.getOutgoing(currentAbs).map(
                 (info) =>
@@ -50,6 +51,7 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
                         ),
                         description: formatLinkPath(info.relPath, info.slug),
                         relPath: info.relPath,
+                        sourceRelPath: currentRel,
                         line: info.line,
                         type: "links",
                         isDir: info.isDir,
@@ -64,6 +66,7 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
                     label: path.basename(info.relPath),
                     description: `${info.relPath}:${info.line + 1}`,
                     relPath: info.relPath,
+                    sourceRelPath: info.relPath,
                     line: info.line,
                     type: "backlinks",
                     isDir: info.isDir,

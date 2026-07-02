@@ -101,6 +101,13 @@ export class MarkdownLinkIndex {
         return this.forwardLinks.get(this.toRootRel(sourceAbs)) ?? [];
     }
 
+    /**
+     * Converts an absolute workspace path to the normalized path used by index entries.
+     */
+    toWorkspaceRelative(fsPath: string): string {
+        return this.toRootRel(fsPath);
+    }
+
     getBacklinks(targetAbs: string): LinkEntry[] {
         const targetRel = this.toRootRel(targetAbs);
         return this.backwardLinks.get(targetRel) ?? [];

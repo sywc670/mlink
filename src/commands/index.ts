@@ -1,9 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
 import * as vscode from "vscode";
 import { MarkdownLinkIndex } from "../services/markdown-index/MarkdownLinkIndex";
-import { findHeadingLine } from "../services/markdown-parser/markdownHeadings";
-import { LinkMetadata } from "../shared/treeItems";
+import { openLinkSource, openLinkTarget } from "./linkNavigation";
+import { LinkCommandMetadata, resolveLinkCommandMetadata } from "./navigationTarget";
 
 export function registerCommands(
     index: MarkdownLinkIndex,
@@ -12,8 +10,25 @@ export function registerCommands(
 ): vscode.Disposable {
     const gotoCommand = vscode.commands.registerCommand(
         "mlink.gotoLocation",
-        async (meta: LinkMetadata) => {
+        async (argument: unknown) => {
+            const meta = getCommandMetadata(argument);
+            if (!meta) {
+                return;
+            }
+
             await openLinkTarget(workspaceRoot, meta);
+        },
+    );
+
+    const openSourceCommand = vscode.commands.registerCommand(
+        "mlink.openLinkSource",
+        async (argument: unknown) => {
+            const meta = getCommandMetadata(argument);
+            if (!meta) {
+                return;
+            }
+
+            await openLinkSource(workspaceRoot, meta);
         },
     );
 
@@ -34,7 +49,7 @@ export function registerCommands(
         },
     );
 
-    return vscode.Disposable.from(gotoCommand, refreshCommand);
+    return vscode.Disposable.from(gotoCommand, openSourceCommand, refreshCommand);
 }
 
 export async function indexWorkspace(index: MarkdownLinkIndex): Promise<void> {
@@ -45,42 +60,11 @@ export async function indexWorkspace(index: MarkdownLinkIndex): Promise<void> {
     await index.indexFiles(files.map((file) => file.fsPath));
 }
 
-async function openLinkTarget(
-    workspaceRoot: string,
-    meta: LinkMetadata,
-): Promise<void> {
-    const absPath = path.join(workspaceRoot, meta.relPath);
-    if (!fs.existsSync(absPath)) {
-        vscode.window.showErrorMessage(`Path does not exist: ${meta.relPath}`);
-        return;
+function getCommandMetadata(argument: unknown): LinkCommandMetadata | undefined {
+    const meta = resolveLinkCommandMetadata(argument);
+    if (!meta) {
+        vscode.window.showErrorMessage("MLink: Missing link metadata.");
     }
 
-    if (meta.isDir) {
-        await vscode.commands.executeCommand(
-            "revealInExplorer",
-            vscode.Uri.file(absPath),
-        );
-        return;
-    }
-
-    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(absPath));
-    const editor = await vscode.window.showTextDocument(doc);
-    const line = getTargetLine(doc, meta);
-    const position = new vscode.Position(line, 0);
-    editor.selection = new vscode.Selection(position, position);
-    editor.revealRange(
-        new vscode.Range(position, position),
-        vscode.TextEditorRevealType.InCenter,
-    );
-}
-
-function getTargetLine(doc: vscode.TextDocument, meta: LinkMetadata): number {
-    if (meta.slug) {
-        const headingLine = findHeadingLine(doc.getText(), meta.slug);
-        if (headingLine !== undefined) {
-            return headingLine;
-        }
-    }
-
-    return Math.min(Math.max(meta.line, 0), doc.lineCount - 1);
+    return meta;
 }

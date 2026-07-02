@@ -11,7 +11,9 @@ MLink is a VS Code extension for viewing links and backlinks in a Markdown works
 - Shows outgoing links and backlinks for the current Markdown file.
 - Shows outgoing heading anchor links separately as `path#heading` in the sidebar.
 - Supports relative paths, workspace absolute paths, and local links without the `.md` suffix.
-- Opens linked files from the sidebar; directory links are revealed in the Explorer.
+- Opens outgoing link targets from the sidebar; directory links are revealed in the Explorer.
+- Opens the source line from the context menu of an outgoing link.
+- Opens backlink source files at the matching line.
 - Highlights the leading `#` of headings referenced through `#heading` links.
 - Indexes workspace Markdown files and updates after file changes.
 - Provides the `MLink: Refresh Workspace Index` command for manual reindexing.
