@@ -5,8 +5,15 @@ import { normalizeHeadingFragment } from "../markdown-parser/markdownHeadings";
 /**
  * Describes a verified local Markdown link found in a source file.
  *
- * Example: `[Guide](docs/guide.md)` in `README.md` becomes
- * `{ relPath: "docs/guide.md", isDir: false, line: 3 }`.
+ * Heading example: `[Usage](docs/guide.md#usage-guide)` in `README.md`
+ * becomes
+ * `{ relPath: "docs/guide.md", isDir: false, line: 8, slug: "usage-guide" }`.
+ *
+ * Backlink example: when `README.md` links to `docs/guide.md#usage-guide`,
+ * the backlink entry for `docs/guide.md` becomes
+ * `{ relPath: "README.md", isDir: false, line: 8, slug: "usage-guide" }`.
+ * The `slug` still describes the target heading in `docs/guide.md`, not a
+ * heading inside `README.md`.
  */
 export interface LinkEntry {
     /**

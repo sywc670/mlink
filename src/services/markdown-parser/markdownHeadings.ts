@@ -75,6 +75,14 @@ export function getReferencedHeadingMarks(
         }));
 }
 
+/**
+ * Finds the line for a parsed heading slug.
+ */
+export function findHeadingLine(content: string, slug: string): number | undefined {
+    return parseMarkdownHeadings(content).find((heading) => heading.slug === slug)
+        ?.line;
+}
+
 function stripClosingHashes(text: string): string {
     return text.replace(/[ \t]+#+[ \t]*$/, "").trim();
 }

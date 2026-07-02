@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { MarkdownLinkIndex } from "../services/markdown-index/MarkdownLinkIndex";
+import { findHeadingLine } from "../services/markdown-parser/markdownHeadings";
 import { LinkMetadata } from "../shared/treeItems";
 
 export function registerCommands(
@@ -64,11 +65,22 @@ async function openLinkTarget(
 
     const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(absPath));
     const editor = await vscode.window.showTextDocument(doc);
-    const line = Math.min(Math.max(meta.line, 0), doc.lineCount - 1);
+    const line = getTargetLine(doc, meta);
     const position = new vscode.Position(line, 0);
     editor.selection = new vscode.Selection(position, position);
     editor.revealRange(
         new vscode.Range(position, position),
         vscode.TextEditorRevealType.InCenter,
     );
+}
+
+function getTargetLine(doc: vscode.TextDocument, meta: LinkMetadata): number {
+    if (meta.slug) {
+        const headingLine = findHeadingLine(doc.getText(), meta.slug);
+        if (headingLine !== undefined) {
+            return headingLine;
+        }
+    }
+
+    return Math.min(Math.max(meta.line, 0), doc.lineCount - 1);
 }

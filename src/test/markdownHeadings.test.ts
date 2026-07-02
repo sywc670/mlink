@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import test from "node:test";
 import {
+    findHeadingLine,
     getReferencedHeadingMarks,
     normalizeHeadingFragment,
     parseMarkdownHeadings,
@@ -33,4 +34,12 @@ test("finds heading hash marks for referenced slugs", () => {
     assert.deepStrictEqual(getReferencedHeadingMarks(content, ["usage"]), [
         { line: 1, hashLength: 2 },
     ]);
+});
+
+test("finds heading line by slug", () => {
+    const content = ["# Intro", "## Usage", "## Usage"].join("\n");
+
+    assert.equal(findHeadingLine(content, "usage"), 1);
+    assert.equal(findHeadingLine(content, "usage-1"), 2);
+    assert.equal(findHeadingLine(content, "missing"), undefined);
 });

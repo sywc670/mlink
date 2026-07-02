@@ -61,18 +61,12 @@ export class MarkdownLinksProvider implements vscode.TreeDataProvider<TreeNode> 
         return this.index.getBacklinks(currentAbs).map(
             (info) =>
                 new LinkItem({
-                    label: formatLinkPath(
-                        path.basename(info.relPath),
-                        info.slug,
-                    ),
-                    description: `${formatLinkPath(info.relPath, info.slug)}:${
-                        info.line + 1
-                    }`,
+                    label: path.basename(info.relPath),
+                    description: `${info.relPath}:${info.line + 1}`,
                     relPath: info.relPath,
                     line: info.line,
                     type: "backlinks",
                     isDir: info.isDir,
-                    slug: info.slug,
                 }),
         );
     }
